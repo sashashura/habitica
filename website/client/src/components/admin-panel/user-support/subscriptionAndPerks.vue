@@ -18,11 +18,16 @@
       </div>
       <div v-if="subscription.dateCreated">
         Creation Date:
-        <strong>{{ moment(subscription.dateCreated).format('YYYY/MM/DD') }}</strong>
+        <strong>{{ dateFormat(subscription.dateCreated) }}</strong>
       </div>
-      <div v-if="subscription.dateTerminated">
+      <div>
         Termination Date:
-        <strong>{{ moment(subscription.dateTerminated).format('YYYY/MM/DD') }}</strong>
+        <strong
+          v-if="subscription.dateTerminated"
+        >
+          {{ dateFormat(subscription.dateTerminated) }}
+        </strong>
+        <strong v-else> None </strong>
       </div>
       <div>
         Consecutive Months:
@@ -30,7 +35,7 @@
       </div>
       <div>
         Months Until Renewal:
-        <strong>{{ subscription.consecutive.offset }}</strong>
+        <strong>{{ subscription.consecutive.offset || 1}}</strong>
       </div>
       <div>
         Gem Cap:
@@ -42,13 +47,15 @@
         Additional Credit (applied upon cancellation):
         <strong>{{ subscription.extraMonths }}</strong>
       </div>
-      <div>
+      <div
+        v-if="subscription.mysteryItems.length > 0"
+      >
         Mystery Items:
         <span
           v-for="(item, index) in subscription.mysteryItems"
           :key="index"
         >
-          <strong v-if="index < subscription.mysteryItems.length"> {{ item }}, </strong>
+          <strong v-if="index < subscription.mysteryItems.length - 1"> {{ item }}, </strong>
           <strong v-else> {{ item }} </strong>
         </span>
       </div>
@@ -57,6 +64,8 @@
 </template>
 
 <script>
+import moment from 'moment';
+
 export default {
   props: {
     subscription: {
@@ -68,6 +77,11 @@ export default {
     return {
       expand: false,
     };
+  },
+  methods: {
+    dateFormat (date) {
+      return moment(date).format('YYYY/MM/DD');
+    },
   },
 };
 </script>
