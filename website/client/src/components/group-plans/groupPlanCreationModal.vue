@@ -25,7 +25,7 @@
           class="btn btn-primary next-button"
           :value="$t('next')"
           :disabled="!newGroupIsReady"
-          @click="close()"
+          @click="createGroup()"
         >
           {{ $t('next') }}
         </button>
@@ -50,30 +50,20 @@
         <lockable-label
           for="new-group-description"
           :text="$t('descriptionOptional')"
+          class="description-label"
         />
+        <div class="characters-remaining">
+          {{ $t('charactersRemaining', {characters: charactersRemaining}) }}
+        </div>
         <textarea
           id="new-group-description"
           v-model="newGroup.description"
           class="form-control option-content description-input"
           cols="3"
           :placeholder="$t('descriptionOptionalText')"
+          maxlength="250"
         ></textarea>
       </div>
-<!--       <div
-        v-if="type === 'guild'"
-        class="form-group"
-      >
-        <div class="custom-control custom-radio">
-          <input
-            v-model="newGroup.privacy"
-            class="custom-control-input"
-            type="radio"
-            name="new-group-privacy"
-            value="private"
-          >
-          <label class="custom-control-label">{{ $t('inviteOnly') }}</label>
-        </div>
-      </div> -->
       <div class="form-group">
         <div class="custom-control custom-checkbox">
           <input
@@ -107,16 +97,6 @@
           @select="newGroup.demographics = $event"
         />
       </div>
-      <div
-        v-if="type === 'party'"
-        class="form-group"
-      >
-        <button
-          class="btn btn-secondary form-control"
-          :value="$t('create')"
-          @click="createGroup()"
-        ></button>
-      </div>
       <div class="form-group">
         <button
           class="btn btn-primary btn-lg btn-block btn-payment"
@@ -127,9 +107,11 @@
         </button>
       </div>
     </div>
+    <!-- PAYMENT -->
+    <!-- @TODO: Separate payment into a separate modal -->
     <div
       v-if="activePage === PAGES.PAY"
-      class="col-12"
+      class="col-12 payments"
     >
       <div class="text-center">
         <payments-buttons
@@ -137,6 +119,13 @@
           :amazon-data="pay(PAYMENTS.AMAZON)"
         />
       </div>
+      <!-- TEMPORARY BUTTON FOR TESTING -->
+      <button
+        class="btn btn-primary btn-payment"
+        @click="success()"
+      >
+        Clicky click click!
+      </button>
     </div>
   </b-modal>
 </template>
@@ -169,9 +158,21 @@
     height: 32px;
   }
 
+  .description-label {
+    margin-bottom: -24px;
+  }
+
   .name-input, .description-input, .group-input {
     margin-top: -4px;
   }
+
+ .characters-remaining {
+  color: $gray-100;
+  font-size: 0.75rem;
+  line-height: 1.33;
+  text-align: right;
+  margin-bottom: 12px;
+ }
 
   .description-input {
     height: 56px;
@@ -184,6 +185,10 @@
   .btn-payment {
     margin: 24px 112px 24px 112px;
     width: 177px;
+  }
+
+  .payments {
+    padding: 24px;
   }
 
   .payment-options {
@@ -229,6 +234,7 @@
     }
     .modal-content {
       width: 448px;
+      height: 436px;
       border-radius: 8px;
       box-shadow: 0 14px 28px 0 rgba(26, 24, 29, 0.24), 0 10px 10px 0 rgba(26, 24, 29, 0.28);
     }
@@ -265,7 +271,7 @@ export default {
       amazonPayments: {},
       PAGES: {
         CREATE_GROUP: 'create-group',
-        UPGRADE_GROUP: 'upgrade-group',
+        // UPGRADE_GROUP: 'upgrade-group',
         PAY: 'pay',
       },
       PAYMENTS: {
@@ -277,15 +283,14 @@ export default {
         type: 'guild',
         privacy: 'private',
         name: '',
+        description: '',
         leaderOnly: {
           challenges: false,
         },
         demographics: null,
       },
       activePage: 'create-group',
-      type: 'guild', // Guild or Party @TODO enum this
-      icons: Object.freeze({
-      }),
+      type: 'guild',
     };
   },
   computed: {
@@ -293,9 +298,10 @@ export default {
     newGroupIsReady () {
       return Boolean(this.newGroup.name) && Boolean(this.newGroup.demographics);
     },
-  },
-  mounted () {
-    console.log('i am mounted');
+    charactersRemaining () {
+      const currentLength = this.newGroup.description ? this.newGroup.description.length : 0;
+      return 250 - currentLength;
+    },
   },
   methods: {
     close () {
@@ -305,7 +311,7 @@ export default {
       this.activePage = page;
     },
     createGroup () {
-      console.log('i am giving habitica money now');
+      console.log(this.newGroup);
       this.changePage(this.PAGES.PAY);
     },
     pay (paymentMethod) {
@@ -335,8 +341,20 @@ export default {
 
       return null;
     },
+    // need to figure out where/how to create the event in amplitude
+    // right now being sent to console in success()
+    sendAnalytics () {
+      return this.newGroup.demographics;
+    },
     onHide () {
       this.sendingInProgress = false;
+    },
+    // temporary function to go with temporary button
+    success () {
+      console.log(this.sendAnalytics());
+      this.sendAnalytics();
+      this.$root.$emit('bv::hide::modal', 'create-group');
+      this.$root.$emit('bv::show::modal', 'payments-success-modal');
     },
   },
 };
