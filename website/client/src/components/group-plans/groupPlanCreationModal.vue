@@ -311,7 +311,6 @@ export default {
       this.activePage = page;
     },
     createGroup () {
-      console.log(this.newGroup);
       this.changePage(this.PAGES.PAY);
     },
     pay (paymentMethod) {
@@ -351,7 +350,6 @@ export default {
     },
     // temporary function to go with temporary button
     success () {
-      console.log(this.sendAnalytics());
       this.sendAnalytics();
       this.$root.$emit('bv::hide::modal', 'create-group');
       this.$root.$emit('bv::show::modal', 'payments-success-modal');
